@@ -15,18 +15,23 @@
                             <use xlink:href="#icon-arrow-short"></use>
                         </svg>
                     </a>
-                    <a href="javascript:void(0)" class="filterby stopPop">Filter by</a>
+                    <a href="javascript:void(0)" class="filterby stopPop" @click="priceShow()">Filter by</a>
                 </div>
                 <div class="accessory-result">
                     <!-- filter -->
-                    <div class="filter stopPop" id="filter">
+                    <div class="filter stopPop" id="filter" v-bind:class="{'filterby-show':isPriceShow}">
                         <dl class="filter-price">
                             <dt>Price:</dt>
                             <dd>
-                                <a href="javascript:void(0)">All</a>
+                                <a href="javascript:void(0)" v-bind:class="{'cur':priceChecked == 'all'}" @click="priceChecked ='all'">All</a>
                             </dd>
-                            <dd>
-                                <a href="javascript:void(0)">0 - 100</a>
+                            <dd v-for="(price,index) in priceFilter">
+                                <a href="javascript:void(0)"  
+                                    @click="postIdx(index)" 
+                                    v-bind:class="{
+                                        'cur':priceChecked==index
+                                    }"
+                                >{{price.startPrice}} - {{price.endPrice}}</a>
                             </dd>
                         </dl>
                     </div>
@@ -35,9 +40,9 @@
                     <div class="accessory-list-wrap">
                         <div class="accessory-list col-4">
                             <ul>
-                                <li v-for = "item in goodList">
+                                <li v-for="item in goodList">
                                     <div class="pic">
-                                        <a href="#"><img v-bind:src="'/static/'+item.prodcutImg" alt=""></a>
+                                        <a href="#"><img v-lazy="'/static/'+item.prodcutImg" alt=""></a>
                                     </div>
                                     <div class="main">
                                         <div class="name">{{item.productName}}</div>
@@ -53,45 +58,75 @@
                 </div>
             </div>
         </div>
+        <div class="md-overlay" v-show="wrapShow" @click="closeWrap()"></div>
         <nav-footer></nav-footer>
     </div>
 </template>
 <script>
-import "./../assets/css/base.css"
-import "./../assets/css/product.css"
-import "./../assets/css/checkout.css"
-import "./../assets/css/login.css"
+    import "./../assets/css/base.css"
+    import "./../assets/css/product.css"
+    import "./../assets/css/checkout.css"
+    import "./../assets/css/login.css"
 
-import NavHeader from '@/components/Header'
-import NavFooter from '@/components/Footer'
-import NavBread from '@/components/Bread'
-// import goods from '../../mock/goods.json'
-import axios from 'axios'
-export default {
-    data() {
-        return {
-            goodList: []
+    import NavHeader from '@/components/Header'
+    import NavFooter from '@/components/Footer'
+    import NavBread from '@/components/Bread'
+    // import goods from '../../mock/goods.json'
+    import axios from 'axios'
+    export default {
+        data() {
+            return {
+                goodList: [],
+                priceFilter: [
+                    {
+                        startPrice: "100",
+                        endPrice: "500"
+                    },
+                    {
+                        startPrice: "500",
+                        endPrice: "1000"
+                    },
+                    {
+                        startPrice: "1000",
+                        endPrice: "1500"
+                    }
+                ],
+                priceChecked:"all",
+                isPriceShow:false,
+                wrapShow:false
+            }
+        },
+        components: {
+            NavHeader,
+            NavFooter,
+            NavBread,
+            // goods
+        },
+        mounted: function () {
+            this.getGoodList()
+        },
+        methods: {
+            getGoodList() {
+                axios.get('/api/result').then((req) => {
+                    console.log(req)
+                    let res = req.data;
+                    this.goodList = res;
+                }).catch((res) => {
+                    console.log(res)
+                })
+            },
+            postIdx(idx){
+                this.priceChecked = idx;
+                this.closeWrap();
+            },
+            priceShow(){
+                this.isPriceShow = !this.isPriceShow
+                this.wrapShow = !this.wrapShow
+            },
+            closeWrap(){
+                this.isPriceShow = !this.isPriceShow
+                this.wrapShow = !this.wrapShow
+            }
         }
-    },
-    components: {
-        NavHeader,
-        NavFooter,
-        NavBread,
-        // goods
-    },
-    mounted: function () {
-        this.getGoodList()
-    },
-    methods: {
-        getGoodList() {
-            axios.get('/api/result').then((req) => {
-                console.log(req)
-                let res = req.data;
-                this.goodList = res;
-            }).catch((res) => {
-                console.log(res)
-            })
-        }
-    }
-};
+    };
 </script>
